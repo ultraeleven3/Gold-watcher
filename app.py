@@ -35,8 +35,9 @@ def send_push_alert(title, message, priority="high", image_path=None):
     headers = {"Title": clean_title, "Priority": priority, "Tags": "chart_with_upwards_trend,rotating_light"}
     try:
         if image_path and os.path.exists(image_path):
+            clean_msg = message.replace("\n", " | ").encode("ascii", "ignore").decode("ascii").strip()
             with open(image_path, "rb") as f:
-                requests.put(url, data=f, headers={**headers, "Filename": "chart.png", "Message": message.encode("ascii", "ignore").decode("ascii")}, timeout=10)
+                requests.put(url, data=f, headers={**headers, "Filename": "chart.png", "Message": clean_msg}, timeout=10)
         else:
             requests.post(url, data=message.encode("utf-8"), headers=headers, timeout=10)
     except Exception as e:
