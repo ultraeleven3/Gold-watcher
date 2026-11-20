@@ -57,12 +57,21 @@ def parse_chart_image(img: Image.Image):
     Return ONLY valid JSON:
     {"valid_signal": true, "direction": "BUY", "entry": 3702.24, "sl": 3699.57, "tp": 3721.01}
     """
-    response = client_ai.models.generate_content(
-      model="gemini-3.8-flash",
-        contents=[img, prompt],
-        config=types.GenerateContentConfig(response_mime_type="application/json")
-    )
-    return json.loads(response.text)
+    models_to_try = ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-3.0-flash"]
+    last_err = None
+    for m in models_to_try:
+        for attempt in range(2):
+            try:
+                response = client_ai.models.generate_content(
+                    model=m,
+                    contents=[img, prompt],
+                    config=types.GenerateContentConfig(response_mime_type="application/json")
+                )
+                return json.loads(response.text)
+            except Exception as e:
+                last_err = e
+                time.sleep(2)
+    raise last_err
 
 
 def generate_setup_chart(df, setup, filename="confirm_chart.png"):
