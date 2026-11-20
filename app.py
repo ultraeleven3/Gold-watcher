@@ -27,16 +27,16 @@ def get_shared_state():
 
 state = get_shared_state()
 
-
 def send_push_alert(title, message, priority="high", image_path=None):
     if not NTFY_TOPIC:
         return
     url = f"https://ntfy.sh/{NTFY_TOPIC}"
-    headers = {"Title": title, "Priority": priority, "Tags": "chart_with_upwards_trend,rotating_light"}
+    clean_title = title.encode("ascii", "ignore").decode("ascii").strip() or "XAUUSD Alert"
+    headers = {"Title": clean_title, "Priority": priority, "Tags": "chart_with_upwards_trend,rotating_light"}
     try:
         if image_path and os.path.exists(image_path):
             with open(image_path, "rb") as f:
-                requests.put(url, data=f, headers={**headers, "Filename": "chart.png", "Message": message}, timeout=10)
+                requests.put(url, data=f, headers={**headers, "Filename": "chart.png", "Message": message.encode("ascii", "ignore").decode("ascii")}, timeout=10)
         else:
             requests.post(url, data=message.encode("utf-8"), headers=headers, timeout=10)
     except Exception as e:
