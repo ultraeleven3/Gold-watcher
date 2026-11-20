@@ -38,12 +38,7 @@ def send_push_alert(title, message, priority="high", image_path=None):
             with open(image_path, "rb") as f:
                 requests.put(url, data=f, headers={**headers, "Filename": "chart.png", "Message": message}, timeout=10)
         else:
-            requests.post(url, data=message.encode("utf-8"), headers=headers, timeout=10)
-    except Exception as e:
-        state["logs"].insert(0, f"⚠️ Push alert error: {e}")
-
-
-def parse_chart_image(img: Image.Image):
+    def parse_chart_image(img: Image.Image):
     client_ai = genai.Client(api_key=GEMINI_API_KEY)
     prompt = """
     Analyze this TradingView XAUUSD (Gold) chart screenshot.
@@ -57,9 +52,23 @@ def parse_chart_image(img: Image.Image):
     Return ONLY valid JSON:
     {"valid_signal": true, "direction": "BUY", "entry": 3702.24, "sl": 3699.57, "tp": 3721.01}
     """
-    models_to_try = ["gemini-3.8-flash", "gemini-3.8-flash-lite", "gemini-3.0-flash"]
+    # Dynamically fetch models active on your API key so we never hit a 404
+    available_models = []
+    try:
+        for m in client_ai.models.list():
+            name = m.name.replace("models/", "")
+            if "gemini" in name and ("flash" in name or "pro" in name) and "embedding" not in name and "image" not in name and "tts" not in name:
+                available_models.append(name)
+    except Exception:
+        pass
+
+    # Prioritize fast flash models first
+    flash_first = [m for m in available_models if "flash" in m] + [m for m in available_models if "flash" not in m]
+    if not flash_first:
+        flash_first = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.0-flash"]
+
     last_err = None
-    for m in models_to_try:
+    for m in flash_first[:5]:
         for attempt in range(2):
             try:
                 response = client_ai.models.generate_content(
@@ -70,7 +79,11 @@ def parse_chart_image(img: Image.Image):
                 return json.loads(response.text)
             except Exception as e:
                 last_err = e
-                time.sleep(2)
+                if "503" in str(e) or "429" in str(e):
+                    time.sleep(2)
+                else:
+                    break
+    raise last_err
     raise last_err
 
 
