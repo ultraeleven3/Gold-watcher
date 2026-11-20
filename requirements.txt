@@ -3,5 +3,6 @@ google-genai
 pillow
 pandas
 mplfinance
+six
 requests
 git+https://github.com/rongardF/tvdatafeed.git
