@@ -58,7 +58,7 @@ def parse_chart_image(img: Image.Image):
     {"valid_signal": true, "direction": "BUY", "entry": 3702.24, "sl": 3699.57, "tp": 3721.01}
     """
     response = client_ai.models.generate_content(
-        model="gemini-2.5-flash",
+      model="gemini-3.8-flash",
         contents=[img, prompt],
         config=types.GenerateContentConfig(response_mime_type="application/json")
     )
