@@ -1,0 +1,7 @@
+streamlit
+google-genai
+pillow
+pandas
+mplfinance
+requests
+git+https://github.com/rongardF/tvdatafeed.git
