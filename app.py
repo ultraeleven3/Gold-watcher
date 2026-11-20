@@ -242,7 +242,15 @@ for i, s in enumerate(state["setups"]):
     if st.button(f"Remove #{i+1}", key=f"del_{i}"):
         state["setups"].pop(i)
         st.rerun()
-
 st.subheader("Live Activity Log")
 for log in state["logs"][:10]:
     st.text(log)
+
+st.divider()
+if st.button("🔔 Send Test Alert to Phone", use_container_width=True):
+    send_push_alert(
+        "TEST XAUUSD ALERT",
+        "Connection verified! Your phone will ring like this on 1m Gold confirmation.",
+        priority="urgent"
+    )
+    st.toast("Test alert sent! Check your phone.")
